@@ -74,6 +74,15 @@ def call_gemini(key, prompt):
     return json.loads(text)
 
 
+def google_message(e):
+    """Google이 돌려준 오류 설명을 꺼낸다. 숫자만으로는 이름이 틀렸는지 · 한도인지 · 바쁜지 알 수 없다."""
+    try:
+        msg = json.loads(e.read().decode("utf-8"))["error"]["message"]
+    except Exception:  # noqa: BLE001
+        msg = ""
+    return (str(msg).strip() or "모델 이름·한도를 확인")[:200]
+
+
 def clean(items, n):
     """AI가 돌려준 것을 기준 안의 값으로만 받는다. 기준 밖의 값은 버린다."""
     out = [None] * n
@@ -114,6 +123,7 @@ class handler(BaseHTTPRequestHandler):
             items = call_gemini(key, build_prompt(texts, crit))
             return self._send({"results": clean(items, len(texts)), "model": MODEL})
         except urllib.error.HTTPError as e:
-            return self._send({"results": None, "reason": f"AI 호출 실패 ({e.code}) — 모델 이름·한도를 확인"})
+            return self._send({"results": None,
+                               "reason": f"AI 호출 실패 ({e.code}) — {MODEL}: {google_message(e)}"})
         except Exception as e:  # noqa: BLE001
             return self._send({"results": None, "reason": f"AI 호출 실패 — {type(e).__name__}"})
