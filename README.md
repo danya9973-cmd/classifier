@@ -18,11 +18,22 @@ python -m http.server 8000      # index.html 을 더블클릭하면 안 됩니�
 2. vercel.com → Add New → Project → Import → Application Preset: Other → Deploy
 3. Settings → Environment Variables
      GEMINI_API_KEY = (aistudio.google.com 에서 받은 키)
-     GEMINI_MODEL   = (선택. 비우면 api/classify.py 의 기본값)
+     GEMINI_MODEL   = (선택. «서버 기본값»으로 쓸 모델. 비우면 api/classify.py 의 기본값)
    → 저장하고 다시 배포
 ```
 
 **키가 없으면 AI만 빠지고 나머지는 그대로 돕니다.**
+
+## AI 모델 고르기
+
+탭 위 **AI 모델** 에서 고릅니다. 재배포가 필요 없습니다.
+
+- «서버 기본값» → `GEMINI_MODEL`, 그것도 없으면 `api/classify.py` 의 기본값. 아래 줄에 그 이름이 보입니다
+- 목록의 다섯 개는 공식 가격표(aistudio.google.com/docs/pricing)에서 **Free tier 무료**인 글쓰기 모델입니다(2026-11-06 확인). 순서는 무료 한도 **추정**일 뿐입니다 — 하루 요청 수는 AI Studio 에 로그인해야 보입니다
+- «직접 입력…» → 가격표에 적힌 이름 그대로. 글자·숫자·`. _ -` 만, 64자까지. 어긋나면 서버가 AI를 부르지 않고 거절합니다
+- 고른 값은 이 브라우저에만 기억됩니다. 채점 표의 AI 열 제목에 실제로 쓴 모델 이름이 붙습니다
+
+AI 채점은 **10건씩** 보냅니다(`app.js` 의 `BATCH`). AI가 60초 안에 답하지 않으면 그 묶음만 한 번 더 보내고, 또 실패하면 이유를 보여주고 멈춥니다.
 
 ## 파일
 
@@ -31,7 +42,7 @@ python -m http.server 8000      # index.html 을 더블클릭하면 안 됩니�
 | `criteria.json` | ★ **분류 기준** — 분류 여섯 개의 정의, 여러 분류에 걸칠 때의 순서, 감정·긴급도 판단법. **사람이 정한다** |
 | `rules.js` | AI 없이 기준만으로 분류하는 **규칙 분류기**. AI와 비교할 기준선 |
 | `mask.js` | AI에 보내기 전 **브라우저 안에서** 전화번호·이름·생년월일·주소를 가린다 |
-| `api/classify.py` | Gemini 호출. **키를 숨기기 위해** 서버에 있다 |
+| `api/classify.py` | Gemini 호출. **키를 숨기기 위해** 서버에 있다. GET 이면 기본 모델 이름만 돌려준다 |
 | `app.js` · `index.html` · `style.css` | 화면 |
 | `data/answer100.json` | 정답을 붙인 **채점용 100건** |
 | `data/practice200.json` | 연습용 200건 («예시 문장 넣기») |
